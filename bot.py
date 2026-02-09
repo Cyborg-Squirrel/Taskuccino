@@ -1,3 +1,4 @@
+import asyncio
 from typing import Optional
 
 import discord
@@ -37,30 +38,38 @@ async def on_bot_mentioned(message):
     # Don't set the bot to "typing" until after we've processed the attachments.
     image_descriptions = ""
     attachment_number = 1
-    for attachment in message.attachments:
-        if attachment.content_type and attachment.content_type.startswith("image/"):
-            image_bytes = await attachment.read()
-            image_description = ollama_client.generate(
-                prompt='Describe this image', images=[image_bytes]
+    image_attachments = [
+        a
+        for a in message.attachments
+        if a.content_type and a.content_type.startswith("image/")
+    ]
+
+    if len(image_attachments) > 0:
+        message.reply(f'Give me a moment to look at what you sent')
+
+    for image_attachment in image_attachments:
+        if image_attachment.content_type and image_attachment.content_type.startswith(
+            "image/"
+        ):
+            image_bytes = await image_attachment.read()
+            image_description = await ollama_client.generate(
+                prompt="Describe this image", images=[image_bytes]
             )
             image_descriptions += (
                 f"Image {attachment_number}: {image_description.response}\n"
             )
             attachment_number += 1
 
-    # async with message.channel.typing(): will display the typing indicator but
-    # the Ollama API call may take too long and we need to unblock the event loop
-    # to send a heartbeat to the Discord API.
-    await message.channel.typing()
-    response = ollama_client.chat(
-        messages=[
-            {
-                "role": "system",
-                "content": f"The user attached: {image_descriptions}",
-            },
-            {"role": "user", "content": message.content},
-        ]
-    )
+    async with message.channel.typing():
+        response = await ollama_client.chat(
+            messages=[
+                {
+                    "role": "system",
+                    "content": f"The user attached: {image_descriptions}",
+                },
+                {"role": "user", "content": message.content},
+            ]
+        )
 
     if response.message.content is not None:
         # Discord has a max message length of 2000 characters

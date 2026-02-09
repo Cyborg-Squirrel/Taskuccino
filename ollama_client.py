@@ -29,12 +29,12 @@ class OllamaClient():
                     return model.name
         raise RuntimeError(f'No model found with capability: {capability}')
 
-    def chat(self, messages:list):
+    async def chat(self, messages:list):
         model = self._get_model_for_capability()
         print(f'Using model {model} to fulfil chat request {messages[-1]["content"]}')
         return self.client.chat(model=model, messages=messages)
     
-    def generate(self, prompt: str, images: Optional[list] = None):
+    async def generate(self, prompt: str, images: Optional[list] = None):
         model = self._get_model_for_capability(images is not None and len(images) > 0 and "vision" or "tools")
         print(f'Using model {model} to fulfil generate request {prompt}')
         return self.client.generate(model=model, prompt=prompt, images=images)
