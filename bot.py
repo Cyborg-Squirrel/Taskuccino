@@ -45,7 +45,7 @@ async def on_bot_mentioned(message):
     ]
 
     if len(image_attachments) > 0:
-        message.reply(f'Give me a moment to look at what you sent')
+        await message.reply(f'Give me a moment to look at what you sent')
 
     for image_attachment in image_attachments:
         if image_attachment.content_type and image_attachment.content_type.startswith(
