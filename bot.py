@@ -1,8 +1,7 @@
-import asyncio
 from typing import Optional
 
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 import config
 from ollama_client import OllamaClient
@@ -20,7 +19,6 @@ ollama_client = OllamaClient(
     api_url=remindme_config.api_url, models=remindme_config.models
 )
 
-
 @bot.event
 async def on_ready():
     """Called when the bot has successfully connected to Discord"""
@@ -28,7 +26,7 @@ async def on_ready():
     print(f"Bot is in {len(bot.guilds)} guild(s)")
 
 
-async def on_bot_mentioned(message):
+async def on_bot_mentioned(message: discord.Message):
     """Called when the bot is mentioned in a message"""
     if remindme_config.react_to_messages:
         reaction_emoji = remindme_config.reaction_emoji
@@ -45,7 +43,7 @@ async def on_bot_mentioned(message):
     ]
 
     if len(image_attachments) > 0:
-        await message.reply(f'Give me a moment to look at what you sent')
+        await message.reply(f"Give me a moment to look at what you sent")
 
     for image_attachment in image_attachments:
         if image_attachment.content_type and image_attachment.content_type.startswith(
@@ -72,8 +70,23 @@ async def on_bot_mentioned(message):
         )
 
     if response.message.content is not None:
-        # Discord has a max message length of 2000 characters
-        await message.reply(response.message.content[:2000])
+        # Discord has a max message length of 2000 characters, split the message up if needed
+        start = 0
+        end = 2000 if len(response.message.content) > 2000 else len(response.message.content) - 1
+        first_chunk = True
+        while end < len(response.message.content):
+            if first_chunk:
+                await message.reply(response.message.content[start:end])
+                first_chunk = False
+            else:
+                await message.channel.send(response.message.content[start:end])
+            start = end
+            if end + 2000 < len(response.message.content):
+                end += 2000
+            elif end == len(response.message.content) - 1:
+                break
+            else:
+                end = len(response.message.content) - 1
 
 
 @bot.event
