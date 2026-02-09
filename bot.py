@@ -19,6 +19,7 @@ ollama_client = OllamaClient(
     api_url=remindme_config.api_url, models=remindme_config.models
 )
 
+
 @bot.event
 async def on_ready():
     """Called when the bot has successfully connected to Discord"""
@@ -58,21 +59,25 @@ async def on_bot_mentioned(message: discord.Message):
             )
             attachment_number += 1
 
-    async with message.channel.typing():
-        response = await ollama_client.chat(
-            messages=[
-                {
-                    "role": "system",
-                    "content": f"The user attached: {image_descriptions}",
-                },
-                {"role": "user", "content": message.content},
-            ]
-        )
+    await message.channel.typing()
+    response = await ollama_client.chat(
+        messages=[
+            {
+                "role": "system",
+                "content": f"The user attached: {image_descriptions}",
+            },
+            {"role": "user", "content": message.content},
+        ]
+    )
 
     if response.message.content is not None:
         # Discord has a max message length of 2000 characters, split the message up if needed
         start = 0
-        end = 2000 if len(response.message.content) > 2000 else len(response.message.content) - 1
+        end = (
+            2000
+            if len(response.message.content) > 2000
+            else len(response.message.content) - 1
+        )
         first_chunk = True
         while end < len(response.message.content):
             if first_chunk:
