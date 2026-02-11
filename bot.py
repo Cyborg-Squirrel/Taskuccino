@@ -4,7 +4,7 @@ from time import sleep
 from typing import Optional
 
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands
 from ollama import ChatResponse
 
 import config

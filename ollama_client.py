@@ -1,6 +1,6 @@
 from typing import Optional
 
-from ollama import ChatResponse, Client, ListResponse, ShowResponse
+from ollama import Client
 
 from config import ModelsConfig
 
