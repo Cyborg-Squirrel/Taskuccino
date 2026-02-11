@@ -16,14 +16,14 @@ from ollama_client import OllamaClient
 intents = discord.Intents.default()
 intents.message_content = True
 
-remindme_config = config.load_config()
+bot_config = config.load_config()
 bot = commands.Bot(
     command_prefix=commands.when_mentioned,
     description="Nothing to see here!",
     intents=intents,
 )
 ollama_client = OllamaClient(
-    api_url=remindme_config.api_url, models=remindme_config.models
+    api_url=bot_config.api_url, models=bot_config.models
 )
 
 
@@ -133,8 +133,8 @@ async def on_bot_mentioned(message: discord.Message):
     if not isinstance(message.channel, discord.abc.Messageable):
         print(f"Channel {message.channel} is not messageable, cannot respond")
         return
-    if remindme_config.react_to_messages:
-        reaction_emoji = remindme_config.reaction_emoji
+    if bot_config.react_to_messages:
+        reaction_emoji = bot_config.reaction_emoji
         await message.add_reaction(reaction_emoji)
 
     image_attachments = [
@@ -202,9 +202,9 @@ async def joined(
 
 def main():
     """Main entry point"""
-    token = remindme_config.token
+    token = bot_config.token
 
-    if remindme_config.token is None or remindme_config.token == "":
+    if bot_config.token is None or bot_config.token == "":
         raise ValueError(
             "Discord token is required in config.json."
             "Please update the config file with your bot token."

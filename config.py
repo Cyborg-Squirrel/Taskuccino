@@ -1,4 +1,4 @@
-"""Configuration management for RemindMe Discord bot."""
+"""Configuration management for Taskuccino Discord bot."""
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -24,8 +24,8 @@ class ModelsConfig:
 
 
 @dataclass
-class RemindMeConfig:
-    """Configuration for the RemindMe Discord bot."""
+class BotConfig:
+    """Configuration for the Taskuccino Discord bot."""
 
     token: str
     api_url: str
@@ -34,10 +34,10 @@ class RemindMeConfig:
     react_to_messages: bool
 
 
-DEFAULT_CONFIG = RemindMeConfig("", "http://localhost:11434", None, "👋", True)
+DEFAULT_CONFIG = BotConfig("", "http://localhost:11434", None, "👋", True)
 
 
-def load_config() -> RemindMeConfig:
+def load_config() -> BotConfig:
     """Load configuration from config.json as a dictionary."""
     if not CONFIG_FILE.exists():
         print(
@@ -51,7 +51,7 @@ def load_config() -> RemindMeConfig:
             config_data = json.load(f)
 
         models = _load_models(config_data.get("models", DEFAULT_CONFIG.models))
-        config = RemindMeConfig(
+        config = BotConfig(
             token=config_data.get("token", DEFAULT_CONFIG.token),
             api_url=config_data.get("api_url", DEFAULT_CONFIG.api_url),
             models=models,
