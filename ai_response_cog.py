@@ -1,22 +1,27 @@
+"""Background message response cog for Discord bot."""
 import multiprocessing as mp
 
 from discord.ext import commands, tasks
 
 
 class AiResponseCog(commands.Cog):
+    """Background cog for handling the response queue."""
 
     def __init__(self, bot: commands.Bot, queue: mp.Queue):
         self.bot = bot
         self.queue = queue
 
     async def cog_load(self):
+        """Start the background task when the cog is loaded."""
         self.my_task.start()
 
     async def cog_unload(self):
+        """Stop the background task when the cog is unloaded."""
         self.my_task.stop()
 
-    @tasks.loop(seconds=15)
+    @tasks.loop(seconds=5)
     async def my_task(self):
+        """Background task that processes AI responses from the queue."""
         if self.queue.empty():
             return
         ollama_response = self.queue.get_nowait()

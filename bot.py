@@ -1,10 +1,12 @@
+"""A Discord chat bot powered by AI"""
+
 import multiprocessing as mp
 from dataclasses import dataclass
 from time import sleep
 from typing import Optional
 
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands
 from ollama import ChatResponse
 
 import config
@@ -27,6 +29,8 @@ ollama_client = OllamaClient(
 
 @dataclass
 class OllamaRequest:
+    """Represents a request to process with Ollama."""
+
     channel_id: int
     message_id: int
     content: str
@@ -47,6 +51,8 @@ class OllamaRequest:
 
 @dataclass
 class OllamaResponse:
+    """Represents a response from Ollama."""
+
     content: str
     request: OllamaRequest
 
@@ -60,6 +66,10 @@ ollama_response_queue = mp.Queue()
 
 
 def ollama_background_task(request_queue: mp.Queue, response_queue: mp.Queue):
+    """
+    Background task that processes requests from the request_queue using the
+    Ollama client and puts responses in the response_queue.
+    """
     print("Starting Ollama background task")
     while True:
         if request_queue.empty():
@@ -77,7 +87,7 @@ def ollama_background_task(request_queue: mp.Queue, response_queue: mp.Queue):
         messages = [
             {
                 "role": "system",
-                "content": f"""
+                "content": """
                 You are a Discord bot. 
                 Text formatting is supported but you can only use bold, italics, 
                 underline, strikethrough, code blocks, and inline code.
@@ -89,9 +99,8 @@ def ollama_background_task(request_queue: mp.Queue, response_queue: mp.Queue):
                 image_description = ollama_client.generate(
                     prompt="Describe this image", images=[attachment]
                 )
-                image_descriptions += (
-                    f"Image {attachment_number}: {image_description.response}\n"
-                )
+                img_response = image_description.response  # pylint: disable=no-member
+                image_descriptions += f"Image {attachment_number}: {img_response}\n"
                 attachment_number += 1
 
             messages.append(
@@ -103,11 +112,8 @@ def ollama_background_task(request_queue: mp.Queue, response_queue: mp.Queue):
 
         messages.append({"role": "user", "content": ollama_request.content})
         chat_response = ollama_client.chat(messages=messages)
-        response_content = (
-            chat_response.message.content
-            if chat_response.message.content is not None
-            else ""
-        )
+        message_content = chat_response.message.content  # pylint: disable=no-member
+        response_content = message_content if message_content is not None else ""
         ollama_response = OllamaResponse(
             content=response_content, request=ollama_request
         )
@@ -139,7 +145,7 @@ async def on_bot_mentioned(message: discord.Message):
     image_attachment_bytes = []
 
     if len(image_attachments) > 0:
-        await message.reply(f"Give me a moment to look at what you sent")
+        await message.reply("Give me a moment to look at what you sent")
 
     for image_attachment in image_attachments:
         if image_attachment.content_type and image_attachment.content_type.startswith(
@@ -176,7 +182,9 @@ async def on_message(message):
 
 @bot.tree.command()
 @discord.app_commands.describe(
-    member="The member you want to get the joined date from; defaults to the user who uses the command"
+    member="""
+    The member you want to get the joined date from.
+    This defaults to the user who uses the command"""
 )
 async def joined(
     interaction: discord.Interaction, member: Optional[discord.Member] = None
@@ -198,7 +206,8 @@ def main():
 
     if remindme_config.token is None or remindme_config.token == "":
         raise ValueError(
-            "Discord token is required in config.json. Please update the config file with your bot token."
+            "Discord token is required in config.json."
+            "Please update the config file with your bot token."
         )
 
     try:
@@ -211,8 +220,6 @@ def main():
         bot.run(token)
     except discord.errors.LoginFailure:
         print("Error: Invalid Discord token")
-    except Exception as e:
-        print(f"Error: {e}")
 
 
 if __name__ == "__main__":
