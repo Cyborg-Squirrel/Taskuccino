@@ -18,7 +18,7 @@ class OllamaClient:
         """Return the name of a model that has the specified capability."""
         if self.models is None:
             list_response = self.client.list()
-            all_models = list_response.models
+            all_models = list_response.models  # pylint: disable=no-member
             for model in all_models:
                 if model.model is not None:
                     model_info = self.client.show(model.model)
