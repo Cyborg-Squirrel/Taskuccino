@@ -1,3 +1,4 @@
+"""Configuration management for RemindMe Discord bot."""
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -40,12 +41,13 @@ def load_config() -> RemindMeConfig:
     """Load configuration from config.json as a dictionary."""
     if not CONFIG_FILE.exists():
         print(
-            "Config file does not exist, falling back to defaults. Please create a config.json file with your settings."
+            """Config file does not exist, falling back to defaults.
+            Please create a config.json file with your settings."""
         )
         return DEFAULT_CONFIG
 
     try:
-        with open(CONFIG_FILE, "r") as f:
+        with open(CONFIG_FILE, "r", encoding="utf-8") as f:
             config_data = json.load(f)
 
         models = _load_models(config_data.get("models", DEFAULT_CONFIG.models))
@@ -63,10 +65,10 @@ def load_config() -> RemindMeConfig:
 
         return config
 
-    except json.JSONDecodeError:
-        print("Error: config.json is not valid JSON. Using defaults.")
+    except json.JSONDecodeError as e:
+        print(f"Error: config.json is not valid JSON. Using defaults. {e}")
         return DEFAULT_CONFIG
-    except Exception as e:
+    except OSError as e:
         print(f"Error loading config: {e}. Using defaults.")
         return DEFAULT_CONFIG
 
@@ -74,10 +76,10 @@ def load_config() -> RemindMeConfig:
 def save_config(config: Dict[str, Any]) -> bool:
     """Save configuration to config.json."""
     try:
-        with open(CONFIG_FILE, "w") as f:
+        with open(CONFIG_FILE, "w", encoding="utf-8") as f:
             json.dump(config, f, indent=2)
         return True
-    except Exception as e:
+    except OSError as e:
         print(f"Error saving config: {e}")
         return False
 

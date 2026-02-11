@@ -1,3 +1,4 @@
+"""A Discord chat bot powered by AI"""
 import multiprocessing as mp
 from dataclasses import dataclass
 from time import sleep
@@ -27,6 +28,7 @@ ollama_client = OllamaClient(
 
 @dataclass
 class OllamaRequest:
+    """Represents a request to process with Ollama."""
     channel_id: int
     message_id: int
     content: str
@@ -47,6 +49,7 @@ class OllamaRequest:
 
 @dataclass
 class OllamaResponse:
+    """Represents a response from Ollama."""
     content: str
     request: OllamaRequest
 
@@ -60,6 +63,10 @@ ollama_response_queue = mp.Queue()
 
 
 def ollama_background_task(request_queue: mp.Queue, response_queue: mp.Queue):
+    """
+    Background task that processes requests from the request_queue using the
+    Ollama client and puts responses in the response_queue.
+    """
     print("Starting Ollama background task")
     while True:
         if request_queue.empty():
@@ -176,7 +183,9 @@ async def on_message(message):
 
 @bot.tree.command()
 @discord.app_commands.describe(
-    member="The member you want to get the joined date from; defaults to the user who uses the command"
+    member="""
+    The member you want to get the joined date from.
+    This defaults to the user who uses the command"""
 )
 async def joined(
     interaction: discord.Interaction, member: Optional[discord.Member] = None
@@ -198,7 +207,8 @@ def main():
 
     if remindme_config.token is None or remindme_config.token == "":
         raise ValueError(
-            "Discord token is required in config.json. Please update the config file with your bot token."
+            "Discord token is required in config.json." \
+            "Please update the config file with your bot token."
         )
 
     try:
@@ -211,8 +221,6 @@ def main():
         bot.run(token)
     except discord.errors.LoginFailure:
         print("Error: Invalid Discord token")
-    except Exception as e:
-        print(f"Error: {e}")
 
 
 if __name__ == "__main__":
