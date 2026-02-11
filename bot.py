@@ -77,7 +77,7 @@ def ollama_background_task(request_queue: mp.Queue, response_queue: mp.Queue):
         messages = [
             {
                 "role": "system",
-                "content": f"""
+                "content": """
                 You are a Discord bot. 
                 Text formatting is supported but you can only use bold, italics, 
                 underline, strikethrough, code blocks, and inline code.
@@ -139,7 +139,7 @@ async def on_bot_mentioned(message: discord.Message):
     image_attachment_bytes = []
 
     if len(image_attachments) > 0:
-        await message.reply(f"Give me a moment to look at what you sent")
+        await message.reply("Give me a moment to look at what you sent")
 
     for image_attachment in image_attachments:
         if image_attachment.content_type and image_attachment.content_type.startswith(

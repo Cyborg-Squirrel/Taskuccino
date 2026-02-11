@@ -40,7 +40,7 @@ def load_config() -> RemindMeConfig:
     """Load configuration from config.json as a dictionary."""
     if not CONFIG_FILE.exists():
         print(
-            f"Config file does not exist, falling back to defaults. Please create a config.json file with your settings."
+            "Config file does not exist, falling back to defaults. Please create a config.json file with your settings."
         )
         return DEFAULT_CONFIG
 
@@ -64,7 +64,7 @@ def load_config() -> RemindMeConfig:
         return config
 
     except json.JSONDecodeError:
-        print(f"Error: config.json is not valid JSON. Using defaults.")
+        print("Error: config.json is not valid JSON. Using defaults.")
         return DEFAULT_CONFIG
     except Exception as e:
         print(f"Error loading config: {e}. Using defaults.")
