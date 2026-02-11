@@ -22,9 +22,7 @@ bot = commands.Bot(
     description="Nothing to see here!",
     intents=intents,
 )
-ollama_client = OllamaClient(
-    api_url=bot_config.api_url, models=bot_config.models
-)
+ollama_client = OllamaClient(api_url=bot_config.api_url, models=bot_config.models)
 
 
 @dataclass
@@ -89,9 +87,9 @@ def ollama_background_task(request_queue: mp.Queue, response_queue: mp.Queue):
                 "role": "system",
                 "content": """
                 You are a Discord bot. 
-                Text formatting is supported but you can only use bold, italics, 
-                underline, strikethrough, code blocks, and inline code.
-                Do not use any other markdown syntax as it will not render properly.""",
+                 Text formatting is supported but you can only use bold, italics, 
+                 underline, strikethrough, code blocks, and inline code.
+                 Do not use any other markdown syntax as it will not render properly.""",
             }
         ]
         if ollama_request.image_attachments:
@@ -106,7 +104,8 @@ def ollama_background_task(request_queue: mp.Queue, response_queue: mp.Queue):
             messages.append(
                 {
                     "role": "system",
-                    "content": f"The user attached: {image_descriptions}",
+                    "content": f"""The user attached an image with the following
+                     description: {image_descriptions}""",
                 }
             )
 
