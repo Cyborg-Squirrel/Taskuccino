@@ -3,6 +3,8 @@ import multiprocessing as mp
 
 from discord.ext import commands, tasks
 
+from _types import OllamaError, OllamaResponse
+
 
 class AiResponseCog(commands.Cog):
     """Background cog for handling the response queue."""
@@ -25,6 +27,12 @@ class AiResponseCog(commands.Cog):
         if self.queue.empty():
             return
         ollama_response = self.queue.get_nowait()
+        ollama_response_message = ''
+        if ollama_response.isinstance(OllamaResponse):
+            ollama_response_message = ollama_response.content
+        elif ollama_response.isinstance(OllamaError):
+            ollama_response_message = ollama_response.error
+
         message = None
         for message in self.bot.cached_messages:
             if message.id == ollama_response.request.message_id:
@@ -34,20 +42,20 @@ class AiResponseCog(commands.Cog):
             start = 0
             end = (
                 2000
-                if len(ollama_response.content) > 2000
-                else len(ollama_response.content) - 1
+                if len(ollama_response_message) > 2000
+                else len(ollama_response_message) - 1
             )
             first_chunk = True
-            while end < len(ollama_response.content):
+            while end < len(ollama_response_message):
                 if first_chunk:
-                    await message.reply(ollama_response.content[start:end])
+                    await message.reply(ollama_response_message[start:end])
                     first_chunk = False
                 else:
-                    await message.channel.send(ollama_response.content[start:end])
+                    await message.channel.send(ollama_response_message[start:end])
                 start = end
-                if end + 2000 < len(ollama_response.content):
+                if end + 2000 < len(ollama_response_message):
                     end += 2000
-                elif end == len(ollama_response.content) - 1:
+                elif end == len(ollama_response_message) - 1:
                     break
                 else:
-                    end = len(ollama_response.content) - 1
+                    end = len(ollama_response_message) - 1
