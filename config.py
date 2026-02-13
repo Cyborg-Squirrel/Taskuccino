@@ -1,11 +1,11 @@
-"""Configuration management for Taskuccino Discord bot."""
+"""Configuration management for Taskuccino bot."""
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 CONFIG_FILE = Path(__file__).parent / "config.json"
-
+SYSTEM_PROMPT_FILE = Path(__file__).parent / "system.md"
 
 @dataclass
 class Model:
@@ -25,7 +25,7 @@ class ModelsConfig:
 
 @dataclass
 class BotConfig:
-    """Configuration for the Taskuccino Discord bot."""
+    """Configuration for the Taskuccino bot."""
 
     token: str
     api_url: str
@@ -33,9 +33,20 @@ class BotConfig:
     reaction_emoji: str
     react_to_messages: bool
 
-
 DEFAULT_CONFIG = BotConfig("", "http://localhost:11434", None, "👋", True)
 
+def load_system_prompt() -> str:
+    """Load the system prompt from the system.md file"""
+    if not CONFIG_FILE.exists():
+        print("The system prompt file was not found! Using default.")
+        return """You are a Discord bot. 
+                 Text formatting is supported but you can only use bold, italics, 
+                 underline, strikethrough, code blocks, and inline code.
+                 Do not use any other markdown syntax as it will not render properly."""
+    
+    with open(SYSTEM_PROMPT_FILE, "r", encoding="utf-8") as f:
+        system_prompt = f.read()
+        return system_prompt
 
 def load_config() -> BotConfig:
     """Load configuration from config.json as a dictionary."""
