@@ -1,3 +1,11 @@
+# Core dependencies for Taskuccino
 discord.py>=2.6.4
-requests>=2.32.5
 ollama>=0.6.1
+
+# Optional: Development dependencies
+# Uncomment to install dev tools:
+# pytest>=7.0
+# pytest-cov>=4.0
+# pytest-mock>=3.10
+# pylint>=2.0.0
+# black>=23.0
