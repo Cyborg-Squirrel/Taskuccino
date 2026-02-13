@@ -1,7 +1,6 @@
 """A Discord chat bot powered by AI"""
 
 import multiprocessing as mp
-from dataclasses import dataclass
 from time import sleep
 from typing import Optional
 
@@ -10,6 +9,7 @@ from discord.ext import commands
 from ollama import ChatResponse
 
 import config
+from _types import OllamaError, OllamaRequest, OllamaResponse
 from ai_response_cog import AiResponseCog
 from ollama_client import OllamaClient
 
@@ -24,41 +24,6 @@ bot = commands.Bot(
     intents=intents,
 )
 ollama_client = OllamaClient(api_url=bot_config.api_url, models=bot_config.models)
-
-
-@dataclass
-class OllamaRequest:
-    """Represents a request to process with Ollama."""
-
-    channel_id: int
-    message_id: int
-    content: str
-    image_attachments: list[bytes]
-
-    def __init__(
-        self,
-        channel_id: int,
-        message_id: int,
-        content: str,
-        image_attachments: list[bytes],
-    ):
-        self.channel_id = channel_id
-        self.message_id = message_id
-        self.content = content
-        self.image_attachments = image_attachments
-
-
-@dataclass
-class OllamaResponse:
-    """Represents a response from Ollama."""
-
-    content: str
-    request: OllamaRequest
-
-    def __init__(self, content: str, request: OllamaRequest):
-        self.content = content
-        self.request = request
-
 
 ollama_request_queue = mp.Queue()
 ollama_response_queue = mp.Queue()
@@ -86,12 +51,19 @@ def ollama_background_task(request_queue: mp.Queue, response_queue: mp.Queue):
         messages = [{"role": "system", "content": system_prompt}]
         if ollama_request.image_attachments:
             for attachment in ollama_request.image_attachments:
-                image_description = ollama_client.generate(
-                    prompt="Describe this image", images=[attachment]
-                )
-                img_response = image_description.response  # pylint: disable=no-member
-                image_descriptions += f"Image {attachment_number}: {img_response}\n"
-                attachment_number += 1
+                try:
+                    image_description = ollama_client.generate(
+                        prompt="Describe this image", images=[attachment]
+                    )
+                    img_response = (
+                        image_description.response # pylint: disable=no-member
+                    )
+                    image_descriptions += f"Image {attachment_number}: {img_response}\n"
+                    attachment_number += 1
+                except Exception as e: # pylint: disable=broad-exception-caught
+                    error_response = OllamaError(e, ollama_request)
+                    response_queue.put(error_response)
+                    return
 
             messages.append(
                 {
@@ -102,13 +74,18 @@ def ollama_background_task(request_queue: mp.Queue, response_queue: mp.Queue):
             )
 
         messages.append({"role": "user", "content": ollama_request.content})
-        chat_response = ollama_client.chat(messages=messages)
-        message_content = chat_response.message.content  # pylint: disable=no-member
-        response_content = message_content if message_content is not None else ""
-        ollama_response = OllamaResponse(
-            content=response_content, request=ollama_request
-        )
-        response_queue.put(ollama_response)
+        try:
+            chat_response = ollama_client.chat(messages=messages)
+            message_content = chat_response.message.content  # pylint: disable=no-member
+            response_content = message_content if message_content is not None else ""
+            ollama_response = OllamaResponse(
+                content=response_content, request=ollama_request
+            )
+            response_queue.put(ollama_response)
+        except Exception as e: # pylint: disable=broad-exception-caught
+            error_response = OllamaError(e, ollama_request)
+            response_queue.put(error_response)
+            return
 
 
 @bot.event
