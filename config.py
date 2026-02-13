@@ -39,11 +39,11 @@ def load_system_prompt() -> str:
     """Load the system prompt from the system.md file"""
     if not CONFIG_FILE.exists():
         print("The system prompt file was not found! Using default.")
-        return """You are a Discord bot. 
-                 Text formatting is supported but you can only use bold, italics, 
-                 underline, strikethrough, code blocks, and inline code.
-                 Do not use any other markdown syntax as it will not render properly."""
-    
+        return """You are a Discord bot.
+                  Text formatting is supported but you can only use bold, italics, 
+                  underline, strikethrough, code blocks, and inline code.
+                  Do not use any other markdown syntax as it will not render properly."""
+
     with open(SYSTEM_PROMPT_FILE, "r", encoding="utf-8") as f:
         system_prompt = f.read()
         return system_prompt
