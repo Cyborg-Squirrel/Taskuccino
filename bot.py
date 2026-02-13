@@ -16,6 +16,7 @@ from ollama_client import OllamaClient
 intents = discord.Intents.default()
 intents.message_content = True
 
+system_prompt = config.load_system_prompt()
 bot_config = config.load_config()
 bot = commands.Bot(
     command_prefix=commands.when_mentioned,
@@ -82,16 +83,7 @@ def ollama_background_task(request_queue: mp.Queue, response_queue: mp.Queue):
         image_descriptions = ""
         attachment_number = 1
         chat_response: ChatResponse
-        messages = [
-            {
-                "role": "system",
-                "content": """
-                You are a Discord bot. 
-                 Text formatting is supported but you can only use bold, italics, 
-                 underline, strikethrough, code blocks, and inline code.
-                 Do not use any other markdown syntax as it will not render properly.""",
-            }
-        ]
+        messages = [{"role": "system", "content": system_prompt}]
         if ollama_request.image_attachments:
             for attachment in ollama_request.image_attachments:
                 image_description = ollama_client.generate(
