@@ -25,14 +25,15 @@ setup(
     ],
     python_requires=">=3.9",
     install_requires=[
-        "discord.py>=2.3.2",
-        "requests>=2.31.0",
-        "ollama>=0.0.1",
+        "discord.py>=2.6.4",
+        "ollama>=0.6.1",
     ],
     extras_require={
         "dev": [
-            "pylint>=2.17.0",
             "pytest>=7.0",
+            "pytest-cov>=4.0",
+            "pytest-mock>=3.10",
+            "pylint>=2.0.0",
             "black>=23.0",
         ],
     },
