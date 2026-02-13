@@ -8,16 +8,15 @@ import discord
 from discord.ext import commands
 from ollama import ChatResponse
 
-import config
-from _types import OllamaError, OllamaRequest, OllamaResponse
-from ai_response_cog import AiResponseCog
-from ollama_client import OllamaClient
+from taskuccino import (AiResponseCog, OllamaClient, load_config,
+                        load_system_prompt)
+from taskuccino._types import OllamaError, OllamaRequest, OllamaResponse
 
 intents = discord.Intents.default()
 intents.message_content = True
 
-system_prompt = config.load_system_prompt()
-bot_config = config.load_config()
+system_prompt = load_system_prompt()
+bot_config = load_config()
 bot = commands.Bot(
     command_prefix=commands.when_mentioned,
     description="Nothing to see here!",

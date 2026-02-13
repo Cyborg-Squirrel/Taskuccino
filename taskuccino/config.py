@@ -4,8 +4,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-CONFIG_FILE = Path(__file__).parent / "config.json"
-SYSTEM_PROMPT_FILE = Path(__file__).parent / "system.md"
+CONFIG_FILE = Path(__file__).parent.parent / "config.json"
+SYSTEM_PROMPT_FILE = Path(__file__).parent.parent / "system.md"
+
 
 @dataclass
 class Model:
@@ -33,27 +34,34 @@ class BotConfig:
     reaction_emoji: str
     react_to_messages: bool
 
+
 DEFAULT_CONFIG = BotConfig("", "http://localhost:11434", None, "👋", True)
 
+
 def load_system_prompt() -> str:
-    """Load the system prompt from the system.md file"""
-    if not CONFIG_FILE.exists():
+    """Load the system prompt from the system.md file."""
+    if not SYSTEM_PROMPT_FILE.exists():
         print("The system prompt file was not found! Using default.")
         return """You are a Discord bot.
                   Text formatting is supported but you can only use bold, italics, 
                   underline, strikethrough, code blocks, and inline code.
                   Do not use any other markdown syntax as it will not render properly."""
 
-    with open(SYSTEM_PROMPT_FILE, "r", encoding="utf-8") as f:
-        system_prompt = f.read()
-        return system_prompt
+    try:
+        with open(SYSTEM_PROMPT_FILE, "r", encoding="utf-8") as f:
+            system_prompt = f.read()
+            return system_prompt
+    except OSError as e:
+        print(f"Error loading system prompt: {e}. Using default.")
+        return DEFAULT_CONFIG.__doc__ or ""
+
 
 def load_config() -> BotConfig:
-    """Load configuration from config.json as a dictionary."""
+    """Load configuration from config.json."""
     if not CONFIG_FILE.exists():
         print(
-            """Config file does not exist, falling back to defaults.
-            Please create a config.json file with your settings."""
+            "Config file does not exist, falling back to defaults. "
+            "Please create a config.json file with your settings."
         )
         return DEFAULT_CONFIG
 
@@ -96,13 +104,16 @@ def save_config(config: Dict[str, Any]) -> bool:
 
 
 def _load_models(model_config: dict) -> Optional[ModelsConfig]:
-    """Load models from config and return a ModelsConfig object."""
-
+    """Load models from config and return a ModelsConfig object.
+    
+    The first model with 'primary': true is set as the primary model.
+    If no primary model is specified, the first model is used as primary.
+    """
     if model_config is None:
         return None
 
     primary_model = None
-    other_models = []
+    backup_models = []
 
     for model_data in model_config:
         model = Model(
@@ -114,12 +125,12 @@ def _load_models(model_config: dict) -> Optional[ModelsConfig]:
         if is_primary and primary_model is None:
             primary_model = model
         else:
-            other_models.append(model)
+            backup_models.append(model)
 
     if primary_model is None:
-        if other_models:
-            primary_model = other_models.pop(0)
+        if backup_models:
+            primary_model = backup_models.pop(0)
         else:
             raise ValueError("At least one model must be configured")
 
-    return ModelsConfig(primary_model=primary_model, backup_models=other_models)
+    return ModelsConfig(primary_model=primary_model, backup_models=backup_models)
