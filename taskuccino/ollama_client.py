@@ -3,7 +3,7 @@ from typing import Optional
 
 from ollama import Client
 
-from config import ModelsConfig
+from taskuccino.config import ModelsConfig
 
 
 class OllamaClient:
@@ -36,13 +36,13 @@ class OllamaClient:
                     return model.name
         raise RuntimeError(f"No model found with capability: {capability}")
 
-    def chat(self, messages: list):
+    def chat(self, messages: list) -> object:
         """Send a chat request to the Ollama model."""
         model = self._get_model_for_capability()
         print(f'Using model {model} to fulfil chat request {messages[-1]["content"]}')
         return self.client.chat(model=model, messages=messages)
 
-    def generate(self, prompt: str, images: Optional[list] = None):
+    def generate(self, prompt: str, images: Optional[list] = None) -> object:
         """Generate a response using the Ollama model."""
         model = self._get_model_for_capability(
             images is not None and len(images) > 0 and "vision" or "tools"

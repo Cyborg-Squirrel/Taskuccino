@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "taskuccino"
+version = "0.1.0"
+description = "A chat bot for forming positive habits and closing the loop on undone tasks."
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "Cyborg-Squirrel"}
+]
+keywords = ["discord", "bot", "ai", "ollama"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+dependencies = [
+    "discord.py>=2.6.4",
+    "ollama>=0.6.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "pytest-mock>=3.10",
+    "pylint>=2.0.0",
+    "black>=23.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/Cyborg-Squirrel/Taskuccino"
+Documentation = "https://github.com/Cyborg-Squirrel/Taskuccino"
+Repository = "https://github.com/Cyborg-Squirrel/Taskuccino.git"
+Issues = "https://github.com/Cyborg-Squirrel/Taskuccino/issues"
+
+[tool.setuptools]
+packages = ["taskuccino"]
+
+[tool.black]
+line-length = 80
+target-version = ['py39', 'py310', 'py311', 'py312']
+
+[tool.pylint.messages_control]
+disable = [
+    "C0111",  # missing-docstring
+]
