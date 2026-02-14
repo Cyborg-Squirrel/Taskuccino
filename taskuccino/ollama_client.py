@@ -1,7 +1,7 @@
 """Ollama client for communicating with Ollama AI models."""
 from typing import Optional
 
-from ollama import Client
+from ollama import ChatResponse, Client, GenerateResponse
 
 from taskuccino.config import ModelsConfig
 
@@ -36,13 +36,13 @@ class OllamaClient:
                     return model.name
         raise RuntimeError(f"No model found with capability: {capability}")
 
-    def chat(self, messages: list) -> object:
+    def chat(self, messages: list) -> ChatResponse:
         """Send a chat request to the Ollama model."""
         model = self._get_model_for_capability()
         print(f'Using model {model} to fulfil chat request {messages[-1]["content"]}')
         return self.client.chat(model=model, messages=messages)
 
-    def generate(self, prompt: str, images: Optional[list] = None) -> object:
+    def generate(self, prompt: str, images: Optional[list] = None) -> GenerateResponse:
         """Generate a response using the Ollama model."""
         model = self._get_model_for_capability(
             images is not None and len(images) > 0 and "vision" or "tools"
