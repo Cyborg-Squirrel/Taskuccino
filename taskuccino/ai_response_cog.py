@@ -23,9 +23,10 @@ class AiResponseCog(commands.Cog):
         if self.queue.empty():
             return
         ollama_response = self.queue.get_nowait()
+        request_message = ollama_response.request.message
         message = None
         for message in self.bot.cached_messages:
-            if message.id == ollama_response.request.message_id:
+            if message.id == request_message.message_id:
                 break
         if message is not None:
             # Discord has a max message length of 2000 characters, split if needed
