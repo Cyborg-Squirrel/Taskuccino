@@ -47,8 +47,7 @@ class OllamaResponse:
 
 
 @dataclass
-class OllamaError:
+class OllamaError(OllamaResponse):
     """Represents an error communicating with Ollama."""
 
     error: object
-    request: OllamaRequest

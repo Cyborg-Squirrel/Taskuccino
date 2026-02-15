@@ -17,7 +17,7 @@ class AiResponseCog(commands.Cog):
     async def cog_unload(self):
         self.my_task.stop()
 
-    @tasks.loop(seconds=15)
+    @tasks.loop(seconds=5)
     async def my_task(self):
         """Background task that processes AI responses from the queue."""
         if self.queue.empty():

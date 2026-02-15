@@ -1,18 +1,17 @@
 """A Discord chat bot powered by AI"""
 
 import multiprocessing as mp
-from time import sleep
 from typing import Optional
 
 import discord
 from discord.abc import Messageable
 from discord.ext import commands
-from ollama import ChatResponse
 
 from taskuccino import (AiResponseCog, OllamaClient, load_config,
                         load_system_prompt)
 from taskuccino._types import (ChatMessage, ChatRole, DiscordMessage,
-                               OllamaError, OllamaRequest, OllamaResponse)
+                               OllamaRequest)
+from taskuccino.ollama_processor import OllamaProcessor
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -31,79 +30,9 @@ ollama_client = OllamaClient(
 ollama_request_queue = mp.Queue()
 ollama_response_queue = mp.Queue()
 
-
-def ollama_background_task(request_queue: mp.Queue, response_queue: mp.Queue):
-    """
-    Background task that processes requests from the request_queue using the
-    Ollama client and puts responses in the response_queue.
-    """
-    print("Starting Ollama background task")
-    while True:
-        if request_queue.empty():
-            sleep(5)
-            continue
-
-        ollama_request = request_queue.get_nowait()
-        if ollama_request is None:
-            sleep(5)
-            continue
-
-        image_descriptions = ""
-        attachment_number = 1
-        chat_response: ChatResponse
-        messages = [{"role": "system", "content": system_prompt}]
-        request_message = ollama_request.message
-
-        for history_message in ollama_request.history:
-            messages.append(
-                {
-                    "role": history_message.role.value,
-                    "content": history_message.content,
-                }
-            )
-
-        image_attachments = request_message.image_attachments
-        if image_attachments is not None and len(image_attachments) > 0:
-            for attachment in image_attachments:
-                try:
-                    image_description = ollama_client.generate(
-                        prompt="Describe this image", images=[attachment]
-                    )
-                    img_response = (
-                        image_description.response  # pylint: disable=no-member
-                    )
-                    image_descriptions += (
-                        f"Image {attachment_number}: {img_response}\n"
-                    )
-                    attachment_number += 1
-                except Exception as e:  # pylint: disable=broad-exception-caught
-                    error_response = OllamaError(e, ollama_request)
-                    response_queue.put(error_response)
-                    return
-
-            messages.append(
-                {
-                    "role": "system",
-                    "content": f"""The user attached an image with the following
-                     description: {image_descriptions}""",
-                }
-            )
-
-        messages.append({"role": "user", "content": request_message.content})
-        try:
-            chat_response = ollama_client.chat(messages=messages)
-            message_content = chat_response.message.content
-            response_content = (
-                message_content if message_content is not None else ""
-            )
-            ollama_response = OllamaResponse(
-                content=response_content, request=ollama_request
-            )
-            response_queue.put(ollama_response)
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            error_response = OllamaError(e, ollama_request)
-            response_queue.put(error_response)
-            return
+ollama_processor = OllamaProcessor(
+    ollama_request_queue, ollama_response_queue, system_prompt, ollama_client
+)
 
 
 @bot.event
@@ -153,7 +82,9 @@ async def on_bot_mentioned(message: discord.Message):
                     role = ChatRole.ASSISTANT
                 if role is not None:
                     history.append(
-                        ChatMessage(role, history_message.content, message.created_at)
+                        ChatMessage(
+                            role, history_message.content, message.created_at
+                        )
                     )
             else:
                 break
@@ -221,12 +152,7 @@ def main():
         )
 
     try:
-        p1 = mp.Process(
-            name="ollama_thread",
-            target=ollama_background_task,
-            args=(ollama_request_queue, ollama_response_queue),
-        )
-        p1.start()
+        ollama_processor.start()
         bot.run(token)
     except discord.errors.LoginFailure:
         print("Error: Invalid Discord token")
